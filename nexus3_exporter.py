@@ -110,7 +110,7 @@ def download_single_asset(quiet, file_path, no_verify, asset):
 
     for tryy in range(1, 11):
         try:
-            r = requests.get(asset["downloadUrl"], verify=False)
+            r = requests.get(asset["downloadUrl"], auth=('umma', 'uL8TZf99_FN'), verify=False)
             with open(file_path, "wb") as f:
                 f.write(r.content)
         except IOError as e:
