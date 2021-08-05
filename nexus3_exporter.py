@@ -68,7 +68,7 @@ def fetch_asset_listing(quiet, server_url, repo_name):
         file_name = 'metea-data.json'
         f = open(file_name, "r")
         data = json.load(f)
-        continuation_token = int(data['continuation_token'])
+        continuation_token = data['continuation_token']
         f.close()
     except:
         continuation_token = -1  # -1 is a special value hinting the first iteration
