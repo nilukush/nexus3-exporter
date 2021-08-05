@@ -63,7 +63,15 @@ def fetch_asset_listing(quiet, server_url, repo_name):
     asset_api_url = urljoin(server_url, f"service/rest/v1/assets?repository={repo_name}")
 
     asset_listing = []
-    continuation_token = -1  # -1 is a special value hinting the first iteration
+    try:
+        import json
+        file_name = 'metea-data.json'
+        f = open(file_name, "r")
+        data = json.load(f)
+        continuation_token = int(data['continuation_token'])
+        f.close()
+    except:
+        continuation_token = -1  # -1 is a special value hinting the first iteration
 
     with tqdm(unit=" API requests", leave=not quiet) as pbar:
         while continuation_token:
@@ -85,6 +93,10 @@ def fetch_asset_listing(quiet, server_url, repo_name):
                 abort(3)
 
             continuation_token = resp["continuationToken"]
+            ## Save our changes to JSON file
+            jsonFile = open(file_name, "w+")
+            jsonFile.write(json.dumps({"continuation_token": continuation_token}))
+            jsonFile.close()
             asset_listing += resp["items"]
 
             pbar.update()
