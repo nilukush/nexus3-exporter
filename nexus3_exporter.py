@@ -1,6 +1,7 @@
 import argparse
 import hashlib
 import os
+import logging
 from json.decoder import JSONDecodeError
 from urllib.parse import urljoin
 
@@ -38,20 +39,20 @@ def main():
     if not output_dir:
         output_dir = repo_name
     if os.path.exists(output_dir):
-        if not quiet: print(
-            f"Output directory '{output_dir}' already exists. Please delete it and then re-run the script.")
+        if not quiet:
+            print(f"Output directory '{output_dir}' already exists. Please delete it and then re-run the script.")
         abort(1)
 
     if "://" not in server_url:
         server_url = "http://" + server_url
 
     if not quiet: print("Fetching asset listing...")
-    asset_listing = fetch_asset_listing(quiet, server_url, repo_name)
+    asset_listing = fetch_asset_listing(quiet, server_url, repo_name, output_dir, no_verify) ####
     if not quiet: print("Done!")
 
-    if not quiet: print("Downloading and verifying assets...")
-    download_assets(quiet, output_dir, no_verify, asset_listing)
-    if not quiet: print("Done!")
+    #if not quiet: print("Downloading and verifying assets...")####
+    #download_assets(quiet, output_dir, no_verify, asset_listing)####
+    #if not quiet: print("Done!")####
 
 
 def abort(code):
@@ -59,7 +60,7 @@ def abort(code):
     exit(code)
 
 
-def fetch_asset_listing(quiet, server_url, repo_name):
+def fetch_asset_listing(quiet, server_url, repo_name, output_dir, no_verify): ####
     asset_api_url = urljoin(server_url, f"service/rest/v1/assets?repository={repo_name}")
 
     asset_listing = []
@@ -69,6 +70,8 @@ def fetch_asset_listing(quiet, server_url, repo_name):
         f = open(file_name, "r")
         data = json.load(f)
         continuation_token = data['continuation_token']
+        print("continuation_token is loaded from file....")
+        logging.info("continuation_token is loaded from file....")
         f.close()
     except:
         continuation_token = -1  # -1 is a special value hinting the first iteration
@@ -98,9 +101,10 @@ def fetch_asset_listing(quiet, server_url, repo_name):
             jsonFile.write(json.dumps({"continuation_token": continuation_token}))
             jsonFile.close()
             asset_listing += resp["items"]
-
+            
             pbar.update()
-
+            
+            download_assets(quiet, output_dir, no_verify, [resp["items"]]) ####
     return asset_listing
 
 
