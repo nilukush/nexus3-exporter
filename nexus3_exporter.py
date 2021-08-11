@@ -38,10 +38,10 @@ def main():
 
     if not output_dir:
         output_dir = repo_name
-    if os.path.exists(output_dir):
-        if not quiet:
-            print(f"Output directory '{output_dir}' already exists. Please delete it and then re-run the script.")
-        abort(1)
+#    if os.path.exists(output_dir):
+#        if not quiet:
+#            print(f"Output directory '{output_dir}' already exists. Please delete it and then re-run the script.")
+#        abort(1)
 
     if "://" not in server_url:
         server_url = "http://" + server_url
@@ -104,7 +104,7 @@ def fetch_asset_listing(quiet, server_url, repo_name, output_dir, no_verify): ##
             
             pbar.update()
             
-            download_assets(quiet, output_dir, no_verify, [resp["items"]]) ####
+            download_assets(quiet, output_dir, no_verify, resp["items"]) ####
     return asset_listing
 
 
