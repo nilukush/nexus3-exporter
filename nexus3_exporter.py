@@ -2,6 +2,7 @@ import argparse
 import hashlib
 import os
 import logging
+import time
 from json.decoder import JSONDecodeError
 from urllib.parse import urljoin
 
@@ -45,10 +46,15 @@ def main():
 
     if "://" not in server_url:
         server_url = "http://" + server_url
-
-    if not quiet: print("Fetching asset listing...")
-    asset_listing = fetch_asset_listing(quiet, server_url, repo_name, output_dir, no_verify) ####
-    if not quiet: print("Done!")
+    try:
+        if not quiet: print("Fetching asset listing...")
+        asset_listing = fetch_asset_listing(quiet, server_url, repo_name, output_dir, no_verify) ####
+        if not quiet: print("Done!")
+    except:
+        time.sleep(2)
+        if not quiet: print("Fetching asset listing...")
+        asset_listing = fetch_asset_listing(quiet, server_url, repo_name, output_dir, no_verify) ####
+        if not quiet: print("Done!")
 
     #if not quiet: print("Downloading and verifying assets...")####
     #download_assets(quiet, output_dir, no_verify, asset_listing)####
