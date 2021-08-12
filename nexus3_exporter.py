@@ -46,12 +46,15 @@ def main():
 
     if "://" not in server_url:
         server_url = "http://" + server_url
+    re_run_count = 0
     try:
         if not quiet: print("Fetching asset listing...")
         asset_listing = fetch_asset_listing(quiet, server_url, repo_name, output_dir, no_verify) ####
         if not quiet: print("Done!")
     except:
+        re_run_count += 1
         time.sleep(2)
+        print("Trying to re-run the script", re_run_count)
         if not quiet: print("Fetching asset listing...")
         asset_listing = fetch_asset_listing(quiet, server_url, repo_name, output_dir, no_verify) ####
         if not quiet: print("Done!")
@@ -94,12 +97,14 @@ def fetch_asset_listing(quiet, server_url, repo_name, output_dir, no_verify): ##
             except IOError as e:
                 pbar.close()
                 print(str(e))
-                abort(2)
+                # abort(2)
+                raise Exception("Try to re-run the script")
             except JSONDecodeError as e:
                 pbar.close()
                 print(f"Cannot decode JSON response. Are you sure that the server URL {server_url} is correct and "
                       f"the repository '{repo_name}' actually exists?")
-                abort(3)
+                # abort(3)
+                raise Exception("Try to re-run the script")
 
             continuation_token = resp["continuationToken"]
             ## Save our changes to JSON file
@@ -124,7 +129,8 @@ def download_assets(quiet, output_dir, no_verify, asset_listing):
                 pbar.close()
                 print(f"Failed downloading '{file_path}' due to the following error:")
                 print(error)
-                abort(4)
+                # abort(4)
+                raise Exception("Try to re-run the script")
 
 
 def download_single_asset(quiet, file_path, no_verify, asset):
