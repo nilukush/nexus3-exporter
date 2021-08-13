@@ -47,17 +47,17 @@ def main():
     if "://" not in server_url:
         server_url = "http://" + server_url
     re_run_count = 0
-    try:
-        if not quiet: print("Fetching asset listing...")
-        asset_listing = fetch_asset_listing(quiet, server_url, repo_name, output_dir, no_verify) ####
-        if not quiet: print("Done!")
-    except:
-        re_run_count += 1
-        time.sleep(2)
-        print("Trying to re-run the script", re_run_count)
-        if not quiet: print("Fetching asset listing...")
-        asset_listing = fetch_asset_listing(quiet, server_url, repo_name, output_dir, no_verify) ####
-        if not quiet: print("Done!")
+    while True:
+        try:
+            if not quiet: print("Fetching asset listing...")
+            asset_listing = fetch_asset_listing(quiet, server_url, repo_name, output_dir, no_verify) ####
+            if not quiet: print("Done!")
+            break
+        except:
+            re_run_count += 1
+            time.sleep(2)
+            print("Trying to re-run the script", re_run_count)
+            continue
 
     #if not quiet: print("Downloading and verifying assets...")####
     #download_assets(quiet, output_dir, no_verify, asset_listing)####
