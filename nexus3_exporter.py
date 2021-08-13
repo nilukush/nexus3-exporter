@@ -101,6 +101,7 @@ def fetch_asset_listing(quiet, server_url, repo_name, output_dir, no_verify): ##
                 raise Exception("Try to re-run the script")
             except JSONDecodeError as e:
                 pbar.close()
+                print(str(e))
                 print(f"Cannot decode JSON response. Are you sure that the server URL {server_url} is correct and "
                       f"the repository '{repo_name}' actually exists?")
                 # abort(3)
