@@ -1,6 +1,8 @@
 import argparse
 import hashlib
 import os
+import logging
+import time
 from json.decoder import JSONDecodeError
 from urllib.parse import urljoin
 
@@ -37,21 +39,29 @@ def main():
 
     if not output_dir:
         output_dir = repo_name
-    if os.path.exists(output_dir):
-        if not quiet: print(
-            f"Output directory '{output_dir}' already exists. Please delete it and then re-run the script.")
-        abort(1)
+#    if os.path.exists(output_dir):
+#        if not quiet:
+#            print(f"Output directory '{output_dir}' already exists. Please delete it and then re-run the script.")
+#        abort(1)
 
     if "://" not in server_url:
         server_url = "http://" + server_url
+    re_run_count = 0
+    while True:
+        try:
+            if not quiet: print("Fetching asset listing...")
+            asset_listing = fetch_asset_listing(quiet, server_url, repo_name, output_dir, no_verify) ####
+            if not quiet: print("Done!")
+            break
+        except:
+            re_run_count += 1
+            time.sleep(2)
+            print("Trying to re-run the script", re_run_count)
+            continue
 
-    if not quiet: print("Fetching asset listing...")
-    asset_listing = fetch_asset_listing(quiet, server_url, repo_name)
-    if not quiet: print("Done!")
-
-    if not quiet: print("Downloading and verifying assets...")
-    download_assets(quiet, output_dir, no_verify, asset_listing)
-    if not quiet: print("Done!")
+    #if not quiet: print("Downloading and verifying assets...")####
+    #download_assets(quiet, output_dir, no_verify, asset_listing)####
+    #if not quiet: print("Done!")####
 
 
 def abort(code):
@@ -59,11 +69,21 @@ def abort(code):
     exit(code)
 
 
-def fetch_asset_listing(quiet, server_url, repo_name):
+def fetch_asset_listing(quiet, server_url, repo_name, output_dir, no_verify): ####
     asset_api_url = urljoin(server_url, f"service/rest/v1/assets?repository={repo_name}")
 
     asset_listing = []
-    continuation_token = -1  # -1 is a special value hinting the first iteration
+    try:
+        import json
+        file_name = 'metea-data.json'
+        f = open(file_name, "r")
+        data = json.load(f)
+        continuation_token = data['continuation_token']
+        print("continuation_token is loaded from file....")
+        logging.info("continuation_token is loaded from file....")
+        f.close()
+    except:
+        continuation_token = -1  # -1 is a special value hinting the first iteration
 
     with tqdm(unit=" API requests", leave=not quiet) as pbar:
         while continuation_token:
@@ -77,18 +97,26 @@ def fetch_asset_listing(quiet, server_url, repo_name):
             except IOError as e:
                 pbar.close()
                 print(str(e))
-                abort(2)
+                # abort(2)
+                raise Exception("Try to re-run the script")
             except JSONDecodeError as e:
                 pbar.close()
+                print(str(e))
                 print(f"Cannot decode JSON response. Are you sure that the server URL {server_url} is correct and "
                       f"the repository '{repo_name}' actually exists?")
-                abort(3)
+                # abort(3)
+                raise Exception("Try to re-run the script")
 
             continuation_token = resp["continuationToken"]
+            ## Save our changes to JSON file
+            jsonFile = open(file_name, "w+")
+            jsonFile.write(json.dumps({"continuation_token": continuation_token}))
+            jsonFile.close()
             asset_listing += resp["items"]
-
+            
             pbar.update()
-
+            
+            download_assets(quiet, output_dir, no_verify, resp["items"]) ####
     return asset_listing
 
 
@@ -102,7 +130,8 @@ def download_assets(quiet, output_dir, no_verify, asset_listing):
                 pbar.close()
                 print(f"Failed downloading '{file_path}' due to the following error:")
                 print(error)
-                abort(4)
+                # abort(4)
+                raise Exception("Try to re-run the script")
 
 
 def download_single_asset(quiet, file_path, no_verify, asset):
